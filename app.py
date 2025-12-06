@@ -1,9 +1,3 @@
- (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
-diff --git a/app.py b/app.py
-index 4171ca92be05871ce6ddb12fdf4b2006efc8252c..16bc0cc23fc5640afcf6942ec2b8703f0d2cd6c4 100644
---- a/app.py
-+++ b/app.py
-@@ -1,32 +1,35 @@
  import streamlit as st
  import google.generativeai as genai
  import time
@@ -122,6 +116,3 @@ index 4171ca92be05871ce6ddb12fdf4b2006efc8252c..16bc0cc23fc5640afcf6942ec2b8703f
  
  # --- NAVIGATION ---
  if "page" not in st.session_state: st.session_state.page = "home"
- 
-EOF
-)
