@@ -1,25 +1,25 @@
- import streamlit as st
- import google.generativeai as genai
- import time
- import re
-+import asyncio
-+import io
-+
-+import edge_tts
- from gtts import gTTS
- from streamlit_mic_recorder import mic_recorder
--import io
+import streamlit as st
+import google.generativeai as genai
+import time
+import re
+import asyncio
+import io
+
+import edge_tts
+from gtts import gTTS
+from streamlit_mic_recorder import mic_recorder
+
  
  # --- IMPORTATION DES DONNÉES ---
- try:
-     from prompts import SCENARIOS
-     from glossaire_data import GLOSSAIRE
- except ImportError:
+try:
+    from prompts import SCENARIOS
+    from glossaire_data import GLOSSAIRE
+except ImportError:
      st.error("🚨 Erreur critique : Les fichiers 'prompts.py' ou 'glossaire_data.py' sont manquants.")
      st.stop()
  
  # --- CONFIGURATION DE LA PAGE ---
- st.set_page_config(
+st.set_page_config(
      page_title="Campus Relation Client",
      layout="wide",
      page_icon="🎧",
@@ -30,7 +30,7 @@
  )
  
  # --- CSS / DESIGN & ACCESSIBILITÉ ---
- st.markdown("""
+st.markdown("""
  <style>
      /* TYPOGRAPHIE & LISIBILITÉ */
      html, body, [class*="css"] {
@@ -61,36 +61,34 @@
      except: return None
  
 +async def _parler_async(texte, voix):
-+    communicate = edge_tts.Communicate(texte, voice=voix)
-+    fp = io.BytesIO()
-+    async for chunk in communicate.stream():
-+        if chunk["type"] == "audio":
-+            fp.write(chunk["data"])
-+    fp.seek(0)
-+    return fp
-+
-+
+    communicate = edge_tts.Communicate(texte, voice=voix)
+    fp = io.BytesIO()
+    async for chunk in communicate.stream():
+        if chunk["type"] == "audio":
+            fp.write(chunk["data"])
+    fp.seek(0)
+    return fp
+
+
  def parler(texte, langue='fr'):
-+    voix = "fr-FR-DeniseNeural" if langue.startswith('fr') else "en-US-JennyNeural"
-     try:
--        tts = gTTS(text=texte, lang=langue, slow=False)
--        fp = io.BytesIO()
--        tts.write_to_fp(fp)
-+        loop = asyncio.new_event_loop()
-+        asyncio.set_event_loop(loop)
-+        fp = loop.run_until_complete(_parler_async(texte, voix))
-+        loop.close()
-         return fp
--    except: return None
-+    except:
-+        try:
-+            tts = gTTS(text=texte, lang=langue, slow=False)
-+            fp = io.BytesIO()
-+            tts.write_to_fp(fp)
-+            fp.seek(0)
-+            return fp
-+        except:
-+            return None
+    voix = "fr-FR-DeniseNeural" if langue.startswith('fr') else "en-US-JennyNeural"
+    try:
+
+       loop = asyncio.new_event_loop()
+       asyncio.set_event_loop(loop)
+        fp = loop.run_until_complete(_parler_async(texte, voix))
+        loop.close()
+        return fp
+
+    except:
+        try:
+            tts = gTTS(text=texte, lang=langue, slow=False)
+            fp = io.BytesIO()
+            tts.write_to_fp(fp)
+            fp.seek(0)
+            return fp
+        except:
+            return None
  
  def obtenir_reponse_gemini(msg, hist, prompt):
      try:
