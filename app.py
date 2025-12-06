@@ -144,8 +144,7 @@ def afficher_notice():
         "3. **Parlez au client**.\n"
         "4. **Analysez** vos résultats."
     )
-
-
 if "page" not in st.session_state:
     st.session_state.page = "home"
+
 
